@@ -8,7 +8,6 @@ on:
       - 'socks4.txt'
       - 'socks5.txt'
       - 'LATEST_UPDATE'
-      - 'README.md'
   workflow_dispatch:
 jobs:
   build:
@@ -22,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install requests
-      - name: Send Proxy Files and Text to Telegram
+      - name: Send Latest Update and Files to Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
@@ -37,7 +36,15 @@ jobs:
               print('Error: BOT_TOKEN or CHAT_ID missing!')
               exit(1)
 
-          # 1. ဖိုင်များကို ပို့ခြင်း
+          # 1. LATEST_UPDATE ပါ စာသားများကို အရင်ဆုံး Message အဖြစ် ပို့ခြင်း
+          if os.path.exists('LATEST_UPDATE'):
+              with open('LATEST_UPDATE', 'r', encoding='utf-8') as f:
+                  latest_content = f.read()
+                  message_text = f'🕒 **Latest Update:**\n{latest_content}'
+                  msg_url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+                  requests.post(msg_url, data={'chat_id': chat_id, 'text': message_text, 'parse_mode': 'Markdown'})
+
+          # 2. ကျန်ရှိသော Proxy ဖိုင်များကို LATEST_UPDATE နောက်မှ ဆက်၍ ပို့ခြင်း
           files = ['http.txt', 'socks4.txt', 'socks5.txt']
           for file_name in files:
               if os.path.exists(file_name):
@@ -45,22 +52,4 @@ jobs:
                       url = f'https://api.telegram.org/bot{bot_token}/sendDocument'
                       response = requests.post(url, data={'chat_id': chat_id}, files={'document': f})
                       print(f'Sending {file_name}: {response.status_code}')
-
-          # 2. LATEST_UPDATE နှင့် README.md ပါ စာသားများကို Message အဖြစ် ပို့ခြင်း
-          message_text = ''
-          
-          if os.path.exists('LATEST_UPDATE'):
-              with open('LATEST_UPDATE', 'r', encoding='utf-8') as f:
-                  latest_content = f.read()
-                  message_text += f'🕒 **Latest Update:**\n{latest_content}\n\n'
-
-          if os.path.exists('README.md'):
-              with open('README.md', 'r', encoding='utf-8') as f:
-                  readme_content = f.read()
-                  # စာသား շատ ရှည်ရင် Telegram ကန့်သတ်ချက်ကြောင့် အတိုချုပ် သို့မဟုတ် လိုအပ်သလောက် ယူနိုင်ပါတယ်
-                  message_text += f'📖 **README Info:**\n{readme_content[:1000]}' # ပထမစာပိုဒ် ၁၀၀၀ သာ ယူရန်
-
-          if message_text:
-              msg_url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
-              requests.post(msg_url, data={'chat_id': chat_id, 'text': message_text, 'parse_mode': 'Markdown'})
           "
