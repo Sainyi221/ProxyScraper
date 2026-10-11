@@ -1,7 +1,12 @@
 name: PROXY Updater
 on:
-  schedule:
-    - cron: '0 * * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - 'http.txt'
+      - 'socks4.txt'
+      - 'socks5.txt'
   workflow_dispatch:
 jobs:
   build:
