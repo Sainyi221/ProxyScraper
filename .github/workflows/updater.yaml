@@ -3,33 +3,38 @@ on:
   schedule:
     - cron: '0 */4 * * *'
   workflow_dispatch:
-    inputs:
-      logLevel:
-        description: Log level
-        required: true
-        default: warning
-        type: choice
-        options:
-          - info
-          - warning
-          - debug
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Shell Writer Mode
-        id: shell_writer
-        run: curl -sL ${{ secrets.GIT_UPDATER }} -o updater.sh
-      - name: Run Shell Script
-        id: shell_script_run
-        run: chmod +x updater.sh&&bash ./updater.sh&&rm -r *.sh
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          pip install requests
+      - name: Send Proxy Files to Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          python -c "
+          import os, requests
 
-    env:
-      GIT_UPDATER: ${{ secrets.GIT_UPDATER }}
-      URL_HTTP: ${{ secrets.URL_HTTP }}
-      URL_SOCKS4: ${{ secrets.URL_SOCKS4 }}
-      URL_SOCKS5: ${{ secrets.URL_SOCKS5 }}
-      GIT_EMAIL: ${{ secrets.GIT_EMAIL }}
-      GIT_NAME: ${{ secrets.GIT_NAME }}
-      GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+          bot_token = os.environ.get('BOT_TOKEN')
+          chat_id = os.environ.get('CHAT_ID')
+
+          if not bot_token or not chat_id:
+              print('Error: BOT_TOKEN or CHAT_ID missing!')
+              exit(1)
+
+          files = ['http.txt', 'socks4.txt', 'socks5.txt']
+          for file_name in files:
+              if os.path.exists(file_name):
+                  with open(file_name, 'rb') as f:
+                      url = f'https://api.telegram.org/bot{bot_token}/sendDocument'
+                      response = requests.post(url, data={'chat_id': chat_id}, files={'document': f})
+                      print(f'Sending {file_name}: {response.status_code}')
+          "
