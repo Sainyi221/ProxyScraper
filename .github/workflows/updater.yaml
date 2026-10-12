@@ -2,6 +2,14 @@ name: PROXY Updater
 on:
   schedule:
     - cron: '0 */4 * * *'
+  push:
+    branches:
+      - main
+    paths:
+      - 'http.txt'
+      - 'socks4.txt'
+      - 'socks5.txt'
+      - 'LATEST_UPDATE'
   workflow_dispatch:
 jobs:
   build:
@@ -15,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install requests
-      - name: Send Proxy Files to Telegram
+      - name: Send Latest Update and Files to Telegram
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
@@ -30,6 +38,15 @@ jobs:
               print('Error: BOT_TOKEN or CHAT_ID missing!')
               exit(1)
 
+          # 1. LATEST_UPDATE ပါ စာသားများကို အရင်ဆုံး Message အဖြစ် ပို့ခြင်း
+          if os.path.exists('LATEST_UPDATE'):
+              with open('LATEST_UPDATE', 'r', encoding='utf-8') as f:
+                  latest_content = f.read()
+                  message_text = f'🕒 **Latest Update:**\n{latest_content}'
+                  msg_url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+                  requests.post(msg_url, data={'chat_id': chat_id, 'text': message_text, 'parse_mode': 'Markdown'})
+
+          # 2. ကျန်ရှိသော Proxy ဖိုင်များကို LATEST_UPDATE နောက်မှ ဆက်၍ ပို့ခြင်း
           files = ['http.txt', 'socks4.txt', 'socks5.txt']
           for file_name in files:
               if os.path.exists(file_name):
