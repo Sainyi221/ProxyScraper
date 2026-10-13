@@ -43,7 +43,7 @@ jobs:
           if os.path.exists('LATEST_UPDATE'):
               with open('LATEST_UPDATE', 'r', encoding='utf-8') as f:
                   latest_content = f.read()
-                  message_text = f'🕒 **Latest Update:**\n{latest_content}'
+                  message_text = f'🕒 **Sainyi Free proxy Latest Update:**\n{latest_content}'
                   msg_url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
                   requests.post(msg_url, data={'chat_id': chat_id, 'text': message_text, 'parse_mode': 'Markdown'})
 
