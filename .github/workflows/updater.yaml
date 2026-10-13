@@ -33,26 +33,32 @@ jobs:
           import os, requests
 
           bot_token = os.environ.get('BOT_TOKEN')
-          chat_id = os.environ.get('CHAT_ID')
+          chat_ids = [os.environ.get('CHAT_ID'), os.environ.get('GROUP_ID')]
 
-          if not bot_token or not chat_id:
-              print('Error: BOT_TOKEN or CHAT_ID missing!')
+          if not bot_token:
+              print('Error: BOT_TOKEN missing!')
               exit(1)
 
-          # 1. LATEST_UPDATE ပါ စာသားများကို အရင်ဆုံး Message အဖြစ် ပို့ခြင်း
-          if os.path.exists('LATEST_UPDATE'):
-              with open('LATEST_UPDATE', 'r', encoding='utf-8') as f:
-                  latest_content = f.read()
-                  message_text = f'🕒 **Sainyi Free proxy Latest Update:**\n{latest_content}'
-                  msg_url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
-                  requests.post(msg_url, data={'chat_id': chat_id, 'text': message_text, 'parse_mode': 'Markdown'})
+          for chat_id in chat_ids:
+              if not chat_id:
+                  continue
+              
+              print(f'Sending to Chat ID: {chat_id}')
 
-          # 2. ကျန်ရှိသော Proxy ဖိုင်များကို LATEST_UPDATE နောက်မှ ဆက်၍ ပို့ခြင်း
-          files = ['http.txt', 'socks4.txt', 'socks5.txt']
-          for file_name in files:
-              if os.path.exists(file_name):
-                  with open(file_name, 'rb') as f:
-                      url = f'https://api.telegram.org/bot{bot_token}/sendDocument'
-                      response = requests.post(url, data={'chat_id': chat_id}, files={'document': f})
-                      print(f'Sending {file_name}: {response.status_code}')
+              # 1. LATEST_UPDATE ပါ စာသားများကို အရင်ဆုံး Message အဖြစ် ပို့ခြင်း
+              if os.path.exists('LATEST_UPDATE'):
+                  with open('LATEST_UPDATE', 'r', encoding='utf-8') as f:
+                      latest_content = f.read()
+                      message_text = f'🕒 **Latest Update:**\n{latest_content}'
+                      msg_url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
+                      requests.post(msg_url, data={'chat_id': chat_id, 'text': message_text, 'parse_mode': 'Markdown'})
+
+              # 2. ကျန်ရှိသော Proxy ဖိုင်များကို LATEST_UPDATE နောက်မှ ဆက်၍ ပို့ခြင်း
+              files = ['http.txt', 'socks4.txt', 'socks5.txt']
+              for file_name in files:
+                  if os.path.exists(file_name):
+                      with open(file_name, 'rb') as f:
+                          url = f'https://api.telegram.org/bot{bot_token}/sendDocument'
+                          response = requests.post(url, data={'chat_id': chat_id}, files={'document': f})
+                          print(f'Sending {file_name} to {chat_id}: {response.status_code}')
           "
